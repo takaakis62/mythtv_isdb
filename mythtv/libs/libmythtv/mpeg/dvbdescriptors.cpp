@@ -425,18 +425,18 @@ void ContentDescriptor::Init(DVBKind dvbkind)
         return;
 
     if (dvbkind == kKindISDB) {
-        categoryDesc[0x00] = QObject::tr("News/reports");
-        categoryDesc[0x10] = QObject::tr("Sports");
-        categoryDesc[0x20] = QObject::tr("Information/tabloid show");
-        categoryDesc[0x30] = QObject::tr("Dramas");
-        categoryDesc[0x40] = QObject::tr("Music");
-        categoryDesc[0x50] = QObject::tr("Variety");
-        categoryDesc[0x60] = QObject::tr("Movies");
-        categoryDesc[0x70] = QObject::tr("Animation, special effects");
-        categoryDesc[0x80] = QObject::tr("Documentary/culture");
-        categoryDesc[0x90] = QObject::tr("Theatre, public performance");
-        categoryDesc[0xA0] = QObject::tr("Hobby/education");
-        categoryDesc[0xB0] = QObject::tr("Welfare");
+        categoryDesc[0x00] = QObject::trUtf8("ニュース／報道");
+        categoryDesc[0x10] = QObject::trUtf8("スポーツ");
+        categoryDesc[0x20] = QObject::trUtf8("情報／ワイドショー");
+        categoryDesc[0x30] = QObject::trUtf8("ドラマ");
+        categoryDesc[0x40] = QObject::trUtf8("音楽");
+        categoryDesc[0x50] = QObject::trUtf8("バラエティ");
+        categoryDesc[0x60] = QObject::trUtf8("映画");
+        categoryDesc[0x70] = QObject::trUtf8("アニメ／特撮");
+        categoryDesc[0x80] = QObject::trUtf8("ドキュメンタリー／教養");
+        categoryDesc[0x90] = QObject::trUtf8("劇場／公演");
+        categoryDesc[0xA0] = QObject::trUtf8("趣味／教育");
+        categoryDesc[0xB0] = QObject::trUtf8("福祉");
         categoryDescExists = true;
         return;
     }
