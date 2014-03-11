@@ -251,8 +251,8 @@ static void parse_dvb_event_descriptors(desc_list_t list, uint fix,
 
     if (bestShortEvent)
     {
-        QRegExp pre_pattern("^((\\[.{1,2}\\])+)"); 
-        QRegExp suf_pattern(QString::fromUtf8(".+(−?((\\[.{1,2}\\])+|#\\d+|「|\\(\\d+\\)|（\\d+）|\\(?第|(<.>)+|(＜.＞)+|最終回).*)")); 
+        QRegExp pre_pattern(QString::fromUtf8("^((\\[.{1,2}\\]|5[\\.．]1)+)")); 
+        QRegExp suf_pattern(QString::fromUtf8(".+(−?((\\[.{1,2}\\])+|#\\d+|「|\\(#?\\d+\\)|（\\d+）|\\(?第|(<.>)+|(＜.＞)+|最終回).*)")); 
         ShortEventDescriptor sed(bestShortEvent, dvbkind);
         if (enc)
         {
