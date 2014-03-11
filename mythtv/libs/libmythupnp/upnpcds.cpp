@@ -841,7 +841,7 @@ UPnpCDSExtensionResults *UPnpCDSExtension::ProcessRoot( UPnpCDSRequest          
                                                         .arg( nIdx );
 
                         CDSObject *pItem = CreateContainer( sId,  
-                                                            QObject::tr( pInfo->title ), 
+                                                            QObject::trUtf8( pInfo->title ), 
                                                             m_sExtensionId );
 
                         pItem->SetChildCount( GetDistinctCount( pInfo ) );
@@ -1274,6 +1274,7 @@ void UPnpCDSExtension::CreateItems( UPnpCDSRequest          *pRequest,
     if (query.isConnected())
     {
         QString sWhere( "" );
+        QString sOrder( "" );
 
         if ( sKey.length() > 0)
         {
@@ -1281,9 +1282,15 @@ void UPnpCDSExtension::CreateItems( UPnpCDSRequest          *pRequest,
                        .arg( pInfo->column );
         }
 
+        QString orderColumn( pInfo->orderColumn );
+        if (orderColumn.length() != 0) {
+            sOrder = QString( "ORDER BY %1 " )
+                       .arg( orderColumn );
+        }
+
         QString sSQL = QString( "%1 %2 LIMIT %3, %4" )
                           .arg( GetItemListSQL( pInfo->column )  )
-                          .arg( sWhere )
+                          .arg( sWhere + sOrder )
                           .arg( pRequest->m_nStartingIndex  )
                           .arg( pRequest->m_nRequestedCount );
 
