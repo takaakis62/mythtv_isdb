@@ -39,7 +39,7 @@
 
 UPnpCDSRootInfo UPnpCDSTv::g_RootNodes[] =
 {
-    {   "All Recordings",
+    {   "全ての録画",
         "*",
         "SELECT 0 as key, "
           "CONCAT( title, ': ', subtitle) as name, "
@@ -47,9 +47,9 @@ UPnpCDSRootInfo UPnpCDSTv::g_RootNodes[] =
             "FROM recorded "
             "%1 "
             "ORDER BY starttime DESC",
-        "" },
+        "", "starttime DESC" },
 
-    {   "By Title",
+    {   "タイトル別",
         "title",
         "SELECT title as id, "
           "title as name, "
@@ -58,9 +58,9 @@ UPnpCDSRootInfo UPnpCDSTv::g_RootNodes[] =
             "%1 "
             "GROUP BY title "
             "ORDER BY title",
-        "WHERE title=:KEY" },
+        "WHERE title=:KEY", "starttime DESC" },
 
-    {   "By Genre",
+    {   "ジャンル別",
         "category",
         "SELECT category as id, "
           "category as name, "
@@ -69,9 +69,9 @@ UPnpCDSRootInfo UPnpCDSTv::g_RootNodes[] =
             "%1 "
             "GROUP BY category "
             "ORDER BY category",
-        "WHERE category=:KEY" },
+        "WHERE category=:KEY", "starttime DESC" },
 
-    {   "By Date",
+    {   "日付別",
         "DATE_FORMAT(starttime, '%Y-%m-%d')",
         "SELECT  DATE_FORMAT(starttime, '%Y-%m-%d') as id, "
           "DATE_FORMAT(starttime, '%Y-%m-%d %W') as name, "
@@ -80,9 +80,9 @@ UPnpCDSRootInfo UPnpCDSTv::g_RootNodes[] =
             "%1 "
             "GROUP BY name "
             "ORDER BY starttime DESC",
-        "WHERE DATE_FORMAT(starttime, '%Y-%m-%d') =:KEY" },
+        "WHERE DATE_FORMAT(starttime, '%Y-%m-%d') =:KEY", "starttime DESC" },
 
-    {   "By Channel",
+    {   "チャンネル別",
         "chanid",
         "SELECT channel.chanid as id, "
           "CONCAT(channel.channum, ' ', channel.callsign) as name, "
@@ -92,10 +92,10 @@ UPnpCDSRootInfo UPnpCDSTv::g_RootNodes[] =
             "%1 "
             "GROUP BY name "
             "ORDER BY channel.chanid",
-        "WHERE channel.chanid=:KEY" },
+        "WHERE channel.chanid=:KEY", "starttime DESC" },
 
 
-    {   "By Group",
+    {   "グループ別",
         "recgroup",
         "SELECT recgroup as id, "
           "recgroup as name, count( recgroup ) as children "
@@ -103,7 +103,7 @@ UPnpCDSRootInfo UPnpCDSTv::g_RootNodes[] =
             "%1 "
             "GROUP BY recgroup "
             "ORDER BY recgroup",
-        "WHERE recgroup=:KEY" }
+        "WHERE recgroup=:KEY", "starttime DESC" }
 };
 
 int UPnpCDSTv::g_nRootCount = sizeof( g_RootNodes ) / sizeof( UPnpCDSRootInfo );
