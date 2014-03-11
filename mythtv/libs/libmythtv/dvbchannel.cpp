@@ -238,7 +238,7 @@ bool DVBChannel::Open(DVBChannel *who)
     // Turn on the power to the LNB
     if (tunerType.IsDiSEqCSupported())
     {
-        diseqc_tree = diseqc_dev.FindTree(GetCardID());
+//        diseqc_tree = diseqc_dev.FindTree(GetCardID());
         if (diseqc_tree)
             diseqc_tree->Open(fd_frontend);
     }
@@ -754,7 +754,7 @@ bool DVBChannel::Tune(const DTVMultiplex &tuning,
     {
         VERBOSE(VB_IMPORTANT, LOC_ERR +
                 "DVB-S needs device tree for LNB handling");
-        return false;
+//        return false;
     }
 
     desired_tuning = tuning;
@@ -882,14 +882,47 @@ bool DVBChannel::Tune(const DTVMultiplex &tuning,
         else
 #endif
         {
-            struct dvb_frontend_parameters params = dtvmultiplex_to_dvbparams(
-                tunerType, tuning, intermediate_freq, can_fec_auto);
-
-            if (ioctl(fd_frontend, FE_SET_FRONTEND, &params) < 0)
+            if (DTVTunerType::kTunerTypeDVBS1 == tunerType)
             {
-                VERBOSE(VB_IMPORTANT, LOC_ERR + "Tune(): " +
-                        "Setting Frontend tuning parameters failed." + ENO);
-                return false;
+		usleep(500 * 1000);
+
+                struct dtv_properties *cmds;
+
+                cmds = (struct dtv_properties*) calloc(1, sizeof(*cmds));
+                cmds->props = (struct dtv_property*) calloc(11, sizeof(*(cmds->props)));
+                cmds->props[0].cmd      = DTV_VOLTAGE;
+                cmds->props[0].u.data   = SEC_VOLTAGE_18;
+                cmds->props[1].cmd      = DTV_FREQUENCY;
+                cmds->props[1].u.data   = tuning.frequency;
+                cmds->props[2].cmd      = DTV_ISDBS_TS_ID;
+                cmds->props[2].u.data   = tuning.transportid;
+                cmds->props[3].cmd      = DTV_TUNE;
+                cmds->props[3].u.data   = 1;
+                cmds->num = 4;
+
+                int res = ioctl(fd_frontend, FE_SET_PROPERTY, cmds);
+
+                free(cmds->props);
+                free(cmds);
+
+                if (res < 0)
+                {
+                    VERBOSE(VB_IMPORTANT, LOC_ERR + "Tune(): " +
+                            "Setting Frontend tuning parameters failed." + ENO);
+                    return false;
+                }
+            }
+            else
+            {
+                struct dvb_frontend_parameters params = dtvmultiplex_to_dvbparams(
+                    tunerType, tuning, intermediate_freq, can_fec_auto);
+
+                if (ioctl(fd_frontend, FE_SET_FRONTEND, &params) < 0)
+                {
+                    VERBOSE(VB_IMPORTANT, LOC_ERR + "Tune(): " +
+                            "Setting Frontend tuning parameters failed." + ENO);
+                    return false;
+                }
             }
         }
 
