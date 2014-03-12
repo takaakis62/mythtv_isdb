@@ -1,3 +1,9 @@
-Fixes 0.24 branch README
+ブランチ
+- isdb_master/0.24 - 以下の修正を適用
+- isdb_bs/0.24 - BS視聴関連の修正
+- isdb_eit/0.24 - 番組表関連の修正
+- isdb_etc/0.24 - その他修正
+- upnp/0.24 - UPnP関連の修正
 
-■0.24ブランチをベースにISDB対応
+
+
