@@ -3,6 +3,7 @@
 #ifndef _DVB_DESCRIPTORS_H_
 #define _DVB_DESCRIPTORS_H_
 
+#include <QByteArray>
 #include <QMutex>
 #include <QString>
 
@@ -1110,7 +1111,7 @@ class ExtendedEventDescriptor : public DVBDescriptor
     //   item_length            8   1.0+p2
     //   for (j=0;j<N;j++) { item_char 8 }
     // }
-    QString ItemText(void) const
+    QString ItemText(QByteArray& saved_text) const
         {
            QString     item;
            uint        left, p = 7, ItemDescriptionLen, ItemLength;
@@ -1126,12 +1127,35 @@ class ExtendedEventDescriptor : public DVBDescriptor
 
                ItemLength = _data[p++];
 
-               item += dvb_decode_text(&_data[p], ItemLength);
+               if (ItemDescriptionLen > 0)
+                       saved_text.clear();
+
+               QByteArray item_byte =
+                   QByteArray::fromRawData((char *)&_data[p], ItemLength);
+               left -= 2 + ItemDescriptionLen + ItemLength;
                p += ItemLength;
+
+               if ((ItemLength == 200 || ItemLength == 220) && left == 0) {
+                       // might be split into the next extended event desc.
+                       saved_text = item_byte;
+                       return item;
+               }
+
+               // UNLIKELY
+               // join intra-desciptor split items
+               if (left >= 2 && ItemDescriptionLen > 0 && _data[p] == 0) {
+                       saved_text = item_byte;
+                       continue;
+               }
+
+               if (ItemDescriptionLen == 0)
+                       item_byte.prepend(saved_text);
+               saved_text.clear();
+               item += dvb_decode_text((unsigned char *)item_byte.data(), item_byte.size());
+
                if (ItemLength > 0)
                    item += "\n";
 
-               left -= 2 + ItemDescriptionLen + ItemLength;
                if (left > 0)
                    item += "\n";
            }

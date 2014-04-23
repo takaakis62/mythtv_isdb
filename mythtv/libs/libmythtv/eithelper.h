@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 // Qt includes
+#include <QByteArray>
 #include <QMap>
 #include <QMutex>
 #include <QObject>
