@@ -233,16 +233,30 @@ static void parse_dvb_event_descriptors(desc_list_t list, uint fix,
 
     if (bestShortEvent)
     {
+        QRegExp pre_pattern(QString::fromUtf8("^((\\[.{1,2}\\]|【.】|<[^>]+>|5[\\.．]1)+)")); 
+        QRegExp suf_pattern(QString::fromUtf8(".+(?:〜[^〜]+〜)?.*(?:(?:-[^\\-]+-)|(?:−[^−]+−))?.*(((\\[.{1,2}\\])+|[#＃]\\d+|\\([#＃]?\\d+\\)|（[#＃]?\\d+）|vol\\.\\d+|\\(?第(?!.{1,3}部)|最終回|「(?![^」]+」(.?[<＜]|.*[#＃第]\\d+))|[<＜【▽◆]).*)"), Qt::CaseInsensitive); 
         ShortEventDescriptor sed(bestShortEvent, dvbkind);
         if (enc)
         {
             title    = sed.EventName(enc, enc_len);
-            subtitle = sed.Text(enc, enc_len);
+            pre_pattern.indexIn(title);
+            subtitle = pre_pattern.cap(1);
+            title    = title.remove(pre_pattern);
+            suf_pattern.indexIn(title);
+            subtitle += suf_pattern.cap(1);
+            title    = title.remove(suf_pattern.cap(1)).trimmed();
+            subtitle += sed.Text(enc, enc_len);
         }
         else
         {
             title    = sed.EventName();
-            subtitle = sed.Text();
+            pre_pattern.indexIn(title);
+            subtitle = pre_pattern.cap(1);
+            title    = title.remove(pre_pattern);
+            suf_pattern.indexIn(title);
+            subtitle += suf_pattern.cap(1);
+            title    = title.remove(suf_pattern.cap(1)).trimmed();
+            subtitle += sed.Text();
         }
     }
 
