@@ -1,23 +1,6 @@
-=====
-MythTV Project Info
-=====
-
-Useful project links
------
-
- - `Trac bug tracker <http://code.mythtv.org/trac>`_
-
-   - Please note: If you create a pull request, we expect a corresponding
-     ticket to be created in Trac with a link to the pull request in it.  
-     Trac is our canonical bug tracking location, and many of our developers
-     may not notice the pull request otherwise.
-
-   - Please also note that we only support code that is from the canonical
-     fork at https://github.com/MythTV  For other forks, please send bug
-     reports to the owners of the fork where the code was committed.
-
- - `Documentation wiki <http://www.mythtv.org/wiki>`_
- - `Mailing lists <http://www.mythtv.org/mailman/listinfo>`_
- - `IRC <irc://freenode.net/mythtv-users>`_ at Freenode.net, #mythtv-users
-
-
+ブランチ
+ - isdb_master0.26 - 以下の修正を適用
+ - isdb_bs/0.26 - BS視聴関連の修正
+ - isdb_eit/0.26 - 番組表関連の修正
+ - isdb_etc/0.26 - その他修正
+ - upnp/0.26 - UPnP関連の修正
