@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<mythlocale>
+  <!-- Global Settings -->
+    <!-- EIT, Subtitle, Audio Stream Language Preferences -->
+    <setting name="ISO639Language0" global="true">jpn</setting>
+    <setting name="ISO639Language1" global="true">eng</setting>
+
+    <!-- Recording -->
+    <setting name="TVFormat" global="true">NTSC-JP</setting>
+    <setting name="VbiFormat" global="true">NTSC Closed Caption</setting>
+    <setting name="FreqTable" global="true">japan-bcast</setting>
+
+    <!-- Scheduling -->
+
+    <!-- Advert Detection -->
+
+
+  <!-- Per-host Settings -->
+    <!-- Languages - Self Explanatory -->
+    <setting name="Language">ja_JP</setting>
+
+    <!-- Country -->
+    <setting name="Country">JP</setting>
+
+    <!-- Date/Time format -->
+    <setting name="DateFormat">yyyyMMdd</setting>
+    <setting name="TimeFormat">h:mm AP</setting>
+    <setting name="ShortDateFormat">M/d</setting>
+
+    <!-- Playback -->
+
+  <!-- Plugins -->
+    <!-- MythArchive -->
+    <setting name="MythArchiveVideoFormat">NTSC-JP</setting>
+
+    <!-- Date/Time format -->
+    <setting name="MythArchiveDateFormat">%a %b %d %Y</setting>
+    <setting name="MythArchiveTimeFormat">%I:%M %p</setting>
+</mythlocale>

@@ -8,6 +8,7 @@
 #include "atsc_huffman.h"
 #include "programinfo.h" // for subtitle types and audio and video properties
 #include "dvbtables.h"
+#include "dvbdescriptors.h"
 
 QString DishEventNameDescriptor::Name(uint compression_type) const
 {
@@ -151,7 +152,7 @@ QDate DishEventTagsDescriptor::originalairdate(void) const
     mjd[3] = 0;
     mjd[4] = 0;
 
-    QDateTime t = dvbdate2qt(mjd);
+    QDateTime t = dvbdate2qt(mjd, kKindDVB);
 
     if (!t.isValid())
         return QDate();
@@ -327,10 +328,10 @@ DishThemeType string_to_dish_theme_type(const QString &theme_type)
     return kThemeNone;
 }
 
-DishThemeType DishContentDescriptor::GetTheme(void) const
+DishThemeType DishContentDescriptor::GetTheme(DVBKind dvbkind) const
 {
     if (!dishCategoryDescExists)
-        Init();
+        Init(_dvbkind);
 
     if (Nibble1(0) == 0x00)
         return kThemeOffAir;
@@ -343,10 +344,10 @@ DishThemeType DishContentDescriptor::GetTheme(void) const
     return kThemeNone;
 }
 
-QString DishContentDescriptor::GetCategory(void) const
+QString DishContentDescriptor::GetCategory(DVBKind dvbkind) const
 {
     if (!dishCategoryDescExists)
-        Init();
+        Init(_dvbkind);
 
     QMutexLocker locker(&categoryLock);
 
@@ -357,19 +358,19 @@ QString DishContentDescriptor::GetCategory(void) const
         return *it;
 
     // Fallback to just the theme
-    QString theme = dish_theme_type_to_string(GetTheme());
+    QString theme = dish_theme_type_to_string(GetTheme(_dvbkind));
 
     return theme;
 }
 
 QString DishContentDescriptor::toString() const
 {
-    return QString("%1 : %2").arg(int(GetTheme())).arg(GetCategory());
+    return QString("%1 : %2").arg(int(GetTheme(_dvbkind))).arg(GetCategory(_dvbkind));
 }
 
-void DishContentDescriptor::Init(void)
+void DishContentDescriptor::Init(DVBKind dvbkind)
 {
-    ContentDescriptor::Init();
+    ContentDescriptor::Init(kKindDVB);
 
     QMutexLocker locker(&categoryLock);
 

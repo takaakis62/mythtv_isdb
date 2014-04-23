@@ -155,15 +155,15 @@ DishThemeType string_to_dish_theme_type(const QString &type);
 class DishContentDescriptor : public ContentDescriptor
 {
   public:
-    DishContentDescriptor(const unsigned char *data, int len = 300) :
-        ContentDescriptor(data, len) { }
+    DishContentDescriptor(const unsigned char *data, DVBKind dvbkind, int len = 300) :
+        ContentDescriptor(data, dvbkind, len) { }
 
-    DishThemeType GetTheme(void) const;
-    QString GetCategory(void) const;
+    DishThemeType GetTheme(DVBKind dvbkind) const;
+    QString GetCategory(DVBKind dvbkind) const;
     QString toString() const;
 
   private:
-    static void Init(void);
+    static void Init(DVBKind dvbkind);
 
   private:
     static QMap<uint,QString> themeDesc;
