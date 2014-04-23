@@ -264,6 +264,7 @@ static void parse_dvb_event_descriptors(desc_list_t list, uint fix,
         DVBDescriptor::FindBestMatches(
             list, DescriptorID::extended_event, languagePreferences, dvbkind);
 
+    QByteArray saved_text;
     description = "";
     for (uint j = 0; j < bestExtendedEvents.size(); j++)
     {
@@ -275,11 +276,17 @@ static void parse_dvb_event_descriptors(desc_list_t list, uint fix,
 
         ExtendedEventDescriptor eed(bestExtendedEvents[j], dvbkind);
         if (dvbkind == kKindISDB)
-            description += eed.ItemText();
+            description += eed.ItemText(saved_text);
         else if (enc)
             description += eed.Text(enc, enc_len);
         else
             description += eed.Text();
+    }
+    if (dvbkind == kKindISDB && !saved_text.isEmpty()) {
+        DVBDescriptor d(NULL, kKindISDB);
+        description += d.dvb_decode_text((unsigned char *)saved_text.data(),
+                                         saved_text.size());
+        description += "\n";
     }
 }
 
