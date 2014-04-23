@@ -484,29 +484,41 @@ void ContentDescriptor::Init(DVBKind dvbkind)
 
     if (dvbkind == kKindISDB) {
         categoryDesc[0x00] = QCoreApplication::translate("(Categories)",
-                                                         "News/reports");
+                                                    "ニュース／報道", 0,
+                                         QCoreApplication::UnicodeUTF8);
         categoryDesc[0x10] = QCoreApplication::translate("(Categories)",
-                                                               "Sports");
+                                                          "スポーツ", 0,
+                                         QCoreApplication::UnicodeUTF8);
         categoryDesc[0x20] = QCoreApplication::translate("(Categories)",
-                                             "Information/tabloid show");
+                                                "情報／ワイドショー", 0,
+                                         QCoreApplication::UnicodeUTF8);
         categoryDesc[0x30] = QCoreApplication::translate("(Categories)",
-                                                               "Dramas");
+                                                            "ドラマ", 0,
+                                         QCoreApplication::UnicodeUTF8);
         categoryDesc[0x40] = QCoreApplication::translate("(Categories)",
-                                                                "Music");
+                                                              "音楽", 0,
+                                         QCoreApplication::UnicodeUTF8);
         categoryDesc[0x50] = QCoreApplication::translate("(Categories)",
-                                                              "Variety");
+                                                        "バラエティ", 0,
+                                         QCoreApplication::UnicodeUTF8);
         categoryDesc[0x60] = QCoreApplication::translate("(Categories)",
-                                                               "Movies");
+                                                              "映画", 0,
+                                         QCoreApplication::UnicodeUTF8);
         categoryDesc[0x70] = QCoreApplication::translate("(Categories)",
-                                           "Animation, special effects");
+                                                      "アニメ／特撮", 0,
+                                         QCoreApplication::UnicodeUTF8);
         categoryDesc[0x80] = QCoreApplication::translate("(Categories)",
-                                                  "Documentary/culture");
+                                            "ドキュメンタリー／教養", 0,
+                                         QCoreApplication::UnicodeUTF8);
         categoryDesc[0x90] = QCoreApplication::translate("(Categories)",
-                                          "Theatre, public performance");
+                                                        "劇場／公演", 0,
+                                         QCoreApplication::UnicodeUTF8);
         categoryDesc[0xA0] = QCoreApplication::translate("(Categories)",
-                                                      "Hobby/education");
+                                                        "趣味／教育", 0,
+                                         QCoreApplication::UnicodeUTF8);
         categoryDesc[0xB0] = QCoreApplication::translate("(Categories)",
-                                                              "Welfare");
+                                                              "福祉", 0,
+                                         QCoreApplication::UnicodeUTF8);
         categoryDescExists = true;
         return;
     }
