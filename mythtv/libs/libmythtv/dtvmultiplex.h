@@ -90,6 +90,7 @@ class DTVMultiplex
     // Optional additional info
     uint             mplex;
     QString          sistandard;
+    uint             transportid;
 };
 
 class ScanDTVTransport : public DTVMultiplex
