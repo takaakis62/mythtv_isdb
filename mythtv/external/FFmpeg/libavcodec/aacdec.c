@@ -2397,6 +2397,9 @@ static int aac_decode_frame_int(AVCodecContext *avctx, void *data,
     enum RawDataBlockType elem_type, elem_type_prev = TYPE_END;
     int err, elem_id;
     int samples = 0, multiplier, audio_found = 0, pce_found = 0;
+    uint16_t used_id[TYPE_END] = { 0 }; // bitset of used elem_id's of the type
+    int sce_count = 0;
+    float *tmpbuf = NULL;
 
     if (show_bits(gb, 12) == 0xfff) {
         if (parse_adts_frame_header(ac, gb) < 0) {
@@ -2416,6 +2419,23 @@ static int aac_decode_frame_int(AVCodecContext *avctx, void *data,
     while ((elem_type = get_bits(gb, 3)) != TYPE_END) {
         elem_id = get_bits(gb, 4);
 
+        /* work-around for duplicated elem_id */
+        /* ex. some ADTS frames contain SCE.0 CPE.0 CPE.0(!) LFE.0, without PCE */
+        // check elem_id duplication
+        if (elem_type < TYPE_FIL && used_id[elem_type] & (1 << elem_id)) {
+            int i;
+            for (i = 0; i < 16; i++)
+                if (!(used_id[elem_type] & (1 << i)))
+                    break;
+            if (i == 16)
+                i = elem_id;
+            av_log(avctx, AV_LOG_VERBOSE,
+                   "Changed a duplicated elem_id:%d (of type:%d) to %d.\n",
+                   elem_id, elem_type, i);
+            elem_id = i;
+        }
+        used_id[elem_type] |= (1 << elem_id);
+
         if (elem_type < TYPE_DSE) {
             if (!(che=get_che(ac, elem_type, elem_id))) {
                 av_log(ac->avctx, AV_LOG_ERROR, "channel element %d.%d is not allocated\n",
@@ -2431,6 +2451,7 @@ static int aac_decode_frame_int(AVCodecContext *avctx, void *data,
         case TYPE_SCE:
             err = decode_ics(ac, &che->ch[0], gb, 0, 0);
             audio_found = 1;
+            sce_count++;
             break;
 
         case TYPE_CPE:
@@ -2466,6 +2487,11 @@ static int aac_decode_frame_int(AVCodecContext *avctx, void *data,
                 pop_output_configuration(ac);
             } else {
                 err = output_configure(ac, layout_map, tags, 0, OC_TRIAL_PCE);
+                if (avctx->channels > 8) {
+                    err = -1;
+                    av_log(avctx, AV_LOG_INFO,
+                           "Too many channles in PCE. maybe it's broken.\n");
+                }
                 if (!err)
                     ac->oc[1].m4ac.chan_config = 0;
                 pce_found = 1;
@@ -2506,8 +2532,21 @@ static int aac_decode_frame_int(AVCodecContext *avctx, void *data,
 
     spectral_to_sample(ac);
 
-    multiplier = (ac->oc[1].m4ac.sbr == 1) ? ac->oc[1].m4ac.ext_sample_rate > ac->oc[1].m4ac.sample_rate : 0;
+    multiplier = (ac->oc[1].m4ac.sbr == 1) ? !ac->oc[1].m4ac.ext_sample_rate || ac->oc[1].m4ac.ext_sample_rate > ac->oc[1].m4ac.sample_rate : 0;
+    if (multiplier)
+        av_log(avctx, AV_LOG_DEBUG, "SBR multiplier:%d\n", multiplier);
     samples <<= multiplier;
+
+    /* for dual-mono audio (SCE + SCE) */
+    if (avctx->channels == 2 && sce_count == 2) {
+        if (avctx->dualmono_mode == 0) {
+            tmpbuf = ac->output_data[1];
+            ac->output_data[1] = ac->output_data[0];
+        } else if (avctx->dualmono_mode == 1) {
+            tmpbuf = ac->output_data[0];
+            ac->output_data[0] = ac->output_data[1];
+        }
+    }
 
     if (samples) {
         /* get output buffer */
@@ -2530,6 +2569,13 @@ static int aac_decode_frame_int(AVCodecContext *avctx, void *data,
         *(AVFrame *)data = ac->frame;
     }
     *got_frame_ptr = !!samples;
+
+    if (avctx->channels == 2 && sce_count == 2) {
+        if (avctx->dualmono_mode == 0)
+            ac->output_data[1] = tmpbuf;
+        else if (avctx->dualmono_mode == 1)
+            ac->output_data[0] = tmpbuf;
+    }
 
     if (ac->oc[1].status && audio_found) {
         avctx->sample_rate = ac->oc[1].m4ac.sample_rate << multiplier;
