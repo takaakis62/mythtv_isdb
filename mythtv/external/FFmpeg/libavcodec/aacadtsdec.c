@@ -35,7 +35,8 @@ int avpriv_aac_parse_header(GetBitContext *gbc, AACADTSHeaderInfo *hdr)
         return AAC_AC3_PARSE_ERROR_SYNC;
 
     skip_bits1(gbc);             /* id */
-    skip_bits(gbc, 2);           /* layer */
+    if(get_bits(gbc, 2) != 0)    /* layer */
+        return AAC_AC3_PARSE_ERROR_SYNC;
     crc_abs = get_bits1(gbc);    /* protection_absent */
     aot     = get_bits(gbc, 2);  /* profile_objecttype */
     sr      = get_bits(gbc, 4);  /* sample_frequency_index */
