@@ -446,8 +446,8 @@ void EITHelper::AddEIT(const DVBEventInformationTable *eit)
         {
             if ((EITFixUp::kFixDish & fix) || (EITFixUp::kFixBell & fix))
             {
-                DishContentDescriptor content(content_data);
-                switch (content.GetTheme())
+                DishContentDescriptor content(content_data, dvbkind);
+                switch (content.GetTheme(dvbkind))
                 {
                     case kThemeMovie :
                         category_type = kCategoryMovie;
@@ -462,11 +462,11 @@ void EITHelper::AddEIT(const DVBEventInformationTable *eit)
                         category_type = kCategoryNone;
                 }
                 if (EITFixUp::kFixDish & fix)
-                    category  = content.GetCategory();
+                    category  = content.GetCategory(dvbkind);
             }
             else
             {
-                ContentDescriptor content(content_data);
+                ContentDescriptor content(content_data, dvbkind);
                 category      = content.GetDescription(0);
                 category_type = content.GetMythCategory(0);
             }
