@@ -794,15 +794,17 @@ bool DVBChannel::Tune(const DTVMultiplex &tuning,
 
                 struct dtv_properties *cmds;
 
-		cmds = (struct dtv_properties*) calloc(1, sizeof(*cmds));
+                cmds = (struct dtv_properties*) calloc(1, sizeof(*cmds));
                 cmds->props = (struct dtv_property*) calloc(11, sizeof(*(cmds->props)));
-                cmds->props[0].cmd      = DTV_FREQUENCY;
-                cmds->props[0].u.data   = tuning.frequency;
-                cmds->props[1].cmd      = DTV_ISDBS_TS_ID;
-                cmds->props[1].u.data   = tuning.transportid;
-                cmds->props[2].cmd      = DTV_TUNE;
-                cmds->props[2].u.data   = 1;
-                cmds->num = 3;
+                cmds->props[0].cmd      = DTV_VOLTAGE;
+                cmds->props[0].u.data   = SEC_VOLTAGE_18;
+                cmds->props[1].cmd      = DTV_FREQUENCY;
+                cmds->props[1].u.data   = tuning.frequency;
+                cmds->props[2].cmd      = DTV_ISDBS_TS_ID;
+                cmds->props[2].u.data   = tuning.transportid;
+                cmds->props[3].cmd      = DTV_TUNE;
+                cmds->props[3].u.data   = 1;
+                cmds->num = 4;
 
                 int res = ioctl(fd_frontend, FE_SET_PROPERTY, cmds);
 
