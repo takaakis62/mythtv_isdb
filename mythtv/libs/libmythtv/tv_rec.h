@@ -19,6 +19,7 @@
 #include "signalmonitorlistener.h"
 
 #include "mythconfig.h"
+#include "dvbchannel.h"
 
 // locking order
 // setChannelLock -> stateChangeLock -> triggerEventLoopLock

@@ -10,25 +10,36 @@
 #include "mpegtables.h"
 #include "mythtvexp.h"
 
-QDateTime dvbdate2qt(const unsigned char*);
-time_t dvbdate2unix(const unsigned char*);
+QDateTime dvbdate2qt(const unsigned char*, DVBKind dvbkind);
+time_t dvbdate2unix(const unsigned char*, DVBKind dvbkind);
 uint32_t dvbdate2key(const unsigned char*);
+
+class MTV_PUBLIC DVBTable : public PSIPTable
+{
+  public:
+    DVBTable(const PSIPTable& table, DVBKind dvbkind)
+        : PSIPTable(table), _dvbkind(dvbkind) {}
+    ~DVBTable() {}
+    DVBKind DVBKindStatus() const { return _dvbkind; }
+  protected:
+    DVBKind _dvbkind;
+};
 
 /** \class NetworkInformationTable
  *  \brief This table tells the decoder on which PIDs to find other tables.
  *  \todo This is just a stub.
  */
-class MTV_PUBLIC NetworkInformationTable : public PSIPTable
+class MTV_PUBLIC NetworkInformationTable : public DVBTable
 {
   public:
-    NetworkInformationTable(const NetworkInformationTable& table)
-        : PSIPTable(table), _cached_network_name(QString::null)
+    NetworkInformationTable(const NetworkInformationTable& table, DVBKind dvbkind)
+        : DVBTable(table, dvbkind), _cached_network_name(QString::null)
     {
         assert(TableID::NIT == TableID() || TableID::NITo == TableID());
         Parse();
     }
-    NetworkInformationTable(const PSIPTable& table)
-        : PSIPTable(table), _cached_network_name(QString::null)
+    NetworkInformationTable(const PSIPTable& table, DVBKind dvbkind)
+        : DVBTable(table, dvbkind), _cached_network_name(QString::null)
     {
         assert(TableID::NIT == TableID() || TableID::NITo == TableID());
         Parse();
@@ -95,16 +106,16 @@ class MTV_PUBLIC NetworkInformationTable : public PSIPTable
  *  \brief This table tells the decoder on which PIDs to find A/V data.
  *  \todo This is just a stub.
  */
-class MTV_PUBLIC ServiceDescriptionTable : public PSIPTable
+class MTV_PUBLIC ServiceDescriptionTable : public DVBTable
 {
   public:
-    ServiceDescriptionTable(const ServiceDescriptionTable& table)
-        : PSIPTable(table)
+    ServiceDescriptionTable(const ServiceDescriptionTable& table, DVBKind dvbkind)
+        : DVBTable(table, dvbkind)
     {
         assert(TableID::SDT == TableID() || TableID::SDTo == TableID());
         Parse();
     }
-    ServiceDescriptionTable(const PSIPTable& table) : PSIPTable(table)
+    ServiceDescriptionTable(const PSIPTable& table, DVBKind dvbkind) : DVBTable(table, dvbkind)
     {
         assert(TableID::SDT == TableID() || TableID::SDTo == TableID());
         Parse();
@@ -279,10 +290,10 @@ class MTV_PUBLIC SelectionInformationTable : public PSIPTable
     // CRC_32 32 rpchof
 };
 
-class MTV_PUBLIC DVBEventInformationTable : public PSIPTable
+class MTV_PUBLIC DVBEventInformationTable : public DVBTable
 {
   public:
-    DVBEventInformationTable(const PSIPTable& table) : PSIPTable(table)
+    DVBEventInformationTable(const PSIPTable& table, DVBKind dvbkind) : DVBTable(table, dvbkind)
     {
     // table_id                 8   0.0       0xC7
         assert(IsEIT(TableID()));
@@ -326,9 +337,9 @@ class MTV_PUBLIC DVBEventInformationTable : public PSIPTable
     const unsigned char *StartTime(uint i) const
         { return _ptrs[i]+2; }
     QDateTime StartTimeUTC(uint i) const
-        { return dvbdate2qt(StartTime(i)); }
+        { return dvbdate2qt(StartTime(i), _dvbkind); }
     time_t StartTimeUnixUTC(uint i) const
-        { return dvbdate2unix(StartTime(i)); }
+        { return dvbdate2unix(StartTime(i), _dvbkind); }
     time_t EndTimeUnixUTC(uint i) const
         { return StartTimeUnixUTC(i) + DurationInSeconds(i); }
     uint32_t StartTimeKey(uint i) const
@@ -367,11 +378,11 @@ class MTV_PUBLIC DVBEventInformationTable : public PSIPTable
 /** \class TimeDateTable
  *  \brief This table gives the current DVB stream time
  */
-class MTV_PUBLIC TimeDateTable : public PSIPTable
+class MTV_PUBLIC TimeDateTable : public DVBTable
 {
   public:
-    TimeDateTable(const PSIPTable& table)
-        : PSIPTable(table)
+    TimeDateTable(const PSIPTable& table, DVBKind dvbkind)
+        : DVBTable(table, dvbkind)
     {
         assert(TableID::TDT == TableID());
     }
@@ -386,8 +397,8 @@ class MTV_PUBLIC TimeDateTable : public PSIPTable
     const unsigned char *UTCdata(void) const
         { return pesdata() + 3; }
 
-    QDateTime UTC(void)  const { return dvbdate2qt(UTCdata());   }
-    time_t UTCUnix(void) const { return dvbdate2unix(UTCdata()); }
+    QDateTime UTC(void)  const { return dvbdate2qt(UTCdata(), _dvbkind);   }
+    time_t UTCUnix(void) const { return dvbdate2unix(UTCdata(), _dvbkind); }
 };
 
 #endif // _DVB_TABLES_H_

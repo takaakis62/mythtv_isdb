@@ -26,6 +26,7 @@
 #include <QString>
 
 // MythTV
+#include "dvbdescriptors.h"
 #include "mpegdescriptors.h"
 
 // SCTE 57 p 83
@@ -103,11 +104,11 @@ class ExtendedVideoDescriptor : public MPEGDescriptor
 };
 
 // SCTE 57 p 85
-class SCTEComponentNameDescriptor : public MPEGDescriptor
+class SCTEComponentNameDescriptor : public DVBDescriptor
 {
   public:
-    SCTEComponentNameDescriptor(const unsigned char *data, uint len) :
-        MPEGDescriptor(data, len, DescriptorID::scte_component_name)
+    SCTEComponentNameDescriptor(const unsigned char *data, DVBKind dvbkind, int len = 300) :
+        DVBDescriptor(data, dvbkind, len, DescriptorID::scte_component_name)
     {
         // TODO make sure descriptor is long enough.. set _data NULL otherwise
     }

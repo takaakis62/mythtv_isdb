@@ -27,7 +27,8 @@ class MTV_PUBLIC DVBStreamData : virtual public MPEGStreamData
 {
   public:
     DVBStreamData(uint desired_netid, uint desired_tsid,
-                  int desired_program, bool cacheTables = false);
+                  int desired_program, bool cacheTables = false,
+                  DVBKind dvbkind = kKindDVB);
     virtual ~DVBStreamData();
 
     void Reset(void) { Reset(0, 0, -1); }
@@ -214,6 +215,7 @@ class MTV_PUBLIC DVBStreamData : virtual public MPEGStreamData
     /// DVB table monitoring
     uint                      _desired_netid;
     uint                      _desired_tsid;
+    DVBKind                   _dvbkind;
 
     /// Decode DishNet's long-term DVB EIT
     bool                      _dvb_eit_dishnet_long;
