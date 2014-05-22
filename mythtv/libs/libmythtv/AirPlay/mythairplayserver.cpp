@@ -8,13 +8,13 @@
 #include <QCoreApplication>
 #include <QKeyEvent>
 #include <QCryptographicHash>
+#include <QTimer>
 
 #include "mthread.h"
 #include "mythdate.h"
 #include "mythlogging.h"
 #include "mythcorecontext.h"
 #include "mythuiactions.h"
-#include "mythmainwindow.h"
 #include "mythuistatetracker.h"
 #include "plist.h"
 #include "tv_play.h"
@@ -33,6 +33,7 @@ QMutex*            MythAirplayServer::gMythAirplayServerMutex = new QMutex(QMute
 #define HTTP_STATUS_SWITCHING_PROTOCOLS 101
 #define HTTP_STATUS_NOT_IMPLEMENTED     501
 #define HTTP_STATUS_UNAUTHORIZED        401
+#define HTTP_STATUS_NOT_FOUND           404
 
 #define AIRPLAY_SERVER_VERSION_STR ""
 #define SERVER_INFO  QString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n"\
@@ -44,7 +45,7 @@ QMutex*            MythAirplayServer::gMythAirplayServerMutex = new QMutex(QMute
 "<key>features</key>\r\n"\
 "<integer>119</integer>\r\n"\
 "<key>model</key>\r\n"\
-"<string>AppleTV2,1</string>\r\n"\
+"<string>MythTV,1</string>\r\n"\
 "<key>protovers</key>\r\n"\
 "<string>1.0</string>\r\n"\
 "<key>srcvers</key>\r\n"\
@@ -391,7 +392,8 @@ void MythAirplayServer::Cleanup(void)
 
 MythAirplayServer::MythAirplayServer()
   : ServerPool(), m_name(QString("MythTV")), m_bonjour(NULL), m_valid(false),
-    m_lock(new QMutex(QMutex::Recursive)), m_setupPort(5100), m_id(-1)
+    m_lock(new QMutex(QMutex::Recursive)), m_setupPort(5100),
+    m_serviceRefresh(NULL)
 {
 }
 
@@ -399,11 +401,6 @@ MythAirplayServer::~MythAirplayServer()
 {
     delete m_lock;
     m_lock = NULL;
-    if (m_id > 0)
-    {
-        GetNotificationCenter()->UnRegister(this, m_id);
-        m_id = -1;
-    }
 }
 
 void MythAirplayServer::Teardown(void)
@@ -412,6 +409,14 @@ void MythAirplayServer::Teardown(void)
 
     // invalidate
     m_valid = false;
+
+    // stop Bonjour Service Updater
+    if (m_serviceRefresh)
+    {
+        m_serviceRefresh->stop();
+        delete m_serviceRefresh;
+        m_serviceRefresh = NULL;
+    }
 
     // disconnect from mDNS
     delete m_bonjour;
@@ -431,12 +436,6 @@ void MythAirplayServer::Teardown(void)
         delete request;
     }
     m_incoming.clear();
-
-    if (m_id > 0)
-    {
-        GetNotificationCenter()->UnRegister(this, m_id);
-        m_id = -1;
-    }
 }
 
 void MythAirplayServer::Start(void)
@@ -483,8 +482,8 @@ void MythAirplayServer::Start(void)
         txt.append(26); txt.append("deviceid="); txt.append(GetMacAddress());
         // supposed to be: 0: video, 1:Phone, 3: Volume Control, 4: HLS
         // 9: Audio, 10: ? (but important without it it fails) 11: Audio redundant
-        txt.append(14); txt.append("features=0xE1B");
-        txt.append(16); txt.append("model=AppleTV2,1");
+        txt.append(13); txt.append("features=0x77");
+        txt.append(14); txt.append("model=MythTV,1");
         txt.append(13); txt.append("srcvers=115.2");
 
         if (!m_bonjour->Register(m_setupPort, type, name, txt))
@@ -492,9 +491,22 @@ void MythAirplayServer::Start(void)
             LOG(VB_GENERAL, LOG_ERR, LOC + "Failed to register service.");
             return;
         }
+        if (!m_serviceRefresh)
+        {
+            m_serviceRefresh = new QTimer();
+            connect(m_serviceRefresh, SIGNAL(timeout()), this, SLOT(timeout()));
+        }
+        // Will force a Bonjour refresh in two seconds
+        m_serviceRefresh->start(2000);
     }
     m_valid = true;
     return;
+}
+
+void MythAirplayServer::timeout(void)
+{
+    m_bonjour->ReAnnounceService();
+    m_serviceRefresh->start(10000);
 }
 
 void MythAirplayServer::Stop(void)
@@ -560,12 +572,6 @@ void MythAirplayServer::deleteConnection(QTcpSocket *socket)
             .arg(remove.data()));
         m_connections.remove(remove);
 
-        if (m_id > 0)
-        {
-            // close any photos that could be displayed
-            GetNotificationCenter()->UnRegister(this, m_id);
-            m_id = -1;
-        }
         MythNotification n(tr("Client disconnected"), tr("AirPlay"),
                            tr("from %1").arg(socket->peerAddress().toString()));
         // Don't show it during playback
@@ -621,6 +627,7 @@ QByteArray MythAirplayServer::StatusToString(int status)
         case HTTP_STATUS_SWITCHING_PROTOCOLS:   return "Switching Protocols";
         case HTTP_STATUS_NOT_IMPLEMENTED:       return "Not Implemented";
         case HTTP_STATUS_UNAUTHORIZED:          return "Unauthorized";
+        case HTTP_STATUS_NOT_FOUND:             return "Not Found";
     }
     return "";
 }
@@ -832,18 +839,23 @@ void MythAirplayServer::HandleResponse(APHTTPRequest *req,
                 req->GetBody().size() > 3 && req->GetBody()[1] == 'P' &&
                 req->GetBody()[2] == 'N' && req->GetBody()[3] == 'G';
             LOG(VB_GENERAL, LOG_INFO, LOC +
-                QString("Received %1 photo").arg(png ? "jpeg" : "png"));
+                QString("Received %1x%2 %3 photo")
+                .arg(image.width()).arg(image.height()).
+                arg(png ? "jpeg" : "png"));
 
-            if (m_id < 0)
+            if (m_connections[session].notificationid < 0)
             {
-                m_id = GetNotificationCenter()->Register(this);
+                m_connections[session].notificationid =
+                    GetNotificationCenter()->Register(this);
             }
             // send full screen display notification
             MythImageNotification n(MythNotification::New, image);
-            n.SetId(m_id);
+            n.SetId(m_connections[session].notificationid);
             n.SetParent(this);
             n.SetFullScreen(true);
             GetNotificationCenter()->Queue(n);
+            // This is a photo session
+            m_connections[session].photos = true;
         }
     }
     else if (req->GetURI() == "/slideshow-features")
@@ -855,6 +867,14 @@ void MythAirplayServer::HandleResponse(APHTTPRequest *req,
     {
         LOG(VB_GENERAL, LOG_INFO, LOC + "Ignoring authorize request.");
     }
+    else if (req->GetURI() == "/setProperty")
+    {
+        status = HTTP_STATUS_NOT_FOUND;
+    }
+    else if (req->GetURI() == "/getProperty")
+    {
+        status = HTTP_STATUS_NOT_FOUND;
+    }  
     else if (req->GetURI() == "/rate")
     {
         float rate = req->GetQueryValue("value").toFloat();
@@ -875,6 +895,8 @@ void MythAirplayServer::HandleResponse(APHTTPRequest *req,
                 UnpausePlayback();
             }
             SendReverseEvent(session, AP_EVENT_PLAYING);
+            // If there's any photos left displayed, hide them
+            HideAllPhotos();
         }
     }
     else if (req->GetURI() == "/play")
@@ -908,7 +930,15 @@ void MythAirplayServer::HandleResponse(APHTTPRequest *req,
             GetPlayerStatus(playing, playerspeed, position, duration, pathname);
             m_connections[session].url = QUrl(m_pathname);
             m_connections[session].position = start_pos * duration;
-            SeekPosition(duration * start_pos);
+            if (TV::IsTVRunning())
+            {
+                HideAllPhotos();
+            }
+            if (duration * start_pos >= .1)
+            {
+                // not point seeking so close to the beginning
+                SeekPosition(duration * start_pos);
+            }
         }
 
         SendReverseEvent(session, AP_EVENT_PLAYING);
@@ -1077,7 +1107,19 @@ QString MythAirplayServer::GetMacAddress()
 
 void MythAirplayServer::StopSession(const QByteArray &session)
 {
-    m_connections[session].stopped = true;
+    AirplayConnection& cnx = m_connections[session];
+
+    if (cnx.photos)
+    {
+        if (cnx.notificationid > 0)
+        {
+            // close any photos that could be displayed
+            GetNotificationCenter()->UnRegister(this, cnx.notificationid, true);
+           cnx.notificationid = -1;
+        }
+        return;
+    }
+    cnx.stopped = true;
     double position    = 0.0f;
     double duration    = 0.0f;
     float  playerspeed = 0.0f;
@@ -1089,6 +1131,10 @@ void MythAirplayServer::StopSession(const QByteArray &session)
         // not ours
         return;
     }
+    if (!playing)
+    {
+        return;
+    }
     StopPlayback();
 }
 
@@ -1096,13 +1142,21 @@ void MythAirplayServer::DisconnectAllClients(const QByteArray &session)
 {
     QMutexLocker locker(m_lock);
     QHash<QByteArray,AirplayConnection>::iterator it = m_connections.begin();
+    AirplayConnection& current_cnx = m_connections[session];
 
     while (it != m_connections.end())
     {
         QTcpSocket *socket;
+        AirplayConnection& cnx = it.value();
 
-        if (it.key() == session)
+        if (it.key() == session ||
+            (current_cnx.reverseSocket && cnx.reverseSocket &&
+             current_cnx.reverseSocket->peerAddress() == cnx.reverseSocket->peerAddress()) ||
+            (current_cnx.controlSocket && cnx.controlSocket &&
+             current_cnx.controlSocket->peerAddress() == cnx.controlSocket->peerAddress()))
         {
+            // ignore if the connection is the currently active one or
+            // from the same IP address
             ++it;
             continue;
         }
@@ -1110,7 +1164,7 @@ void MythAirplayServer::DisconnectAllClients(const QByteArray &session)
         {
             StopSession(it.key());
         }
-        socket = it.value().reverseSocket;
+        socket = cnx.reverseSocket;
         if (socket)
         {
             socket->disconnect();
@@ -1123,7 +1177,7 @@ void MythAirplayServer::DisconnectAllClients(const QByteArray &session)
                 m_incoming.remove(socket);
             }
         }
-        socket = it.value().controlSocket;
+        socket = cnx.controlSocket;
         if (socket)
         {
             socket->disconnect();
@@ -1156,12 +1210,6 @@ void MythAirplayServer::StartPlayback(const QString &pathname)
     gCoreContext->WaitUntilSignals(SIGNAL(TVPlaybackStarted()),
                                    SIGNAL(TVPlaybackAborted()),
                                    NULL);
-    if (TV::IsTVRunning() && m_id > 0)
-    {
-        // playback has started, dismiss the photo is we were showing one
-        GetNotificationCenter()->UnRegister(this, m_id);
-        m_id = -1;
-    }
     LOG(VB_PLAYBACK, LOG_DEBUG, LOC +
         QString("ACTION_HANDLEMEDIA completed"));
 }
@@ -1267,5 +1315,22 @@ void MythAirplayServer::UnpausePlayback(void)
     {
         LOG(VB_PLAYBACK, LOG_DEBUG, LOC +
             QString("Playback not running, nothing to unpause"));
+    }
+}
+
+void MythAirplayServer::HideAllPhotos(void)
+{
+    // playback has started, dismiss any currently displayed photo
+    QHash<QByteArray,AirplayConnection>::iterator it = m_connections.begin();
+
+    while (it != m_connections.end())
+    {
+        AirplayConnection& cnx = it.value();
+
+        if (cnx.photos)
+        {
+            cnx.UnRegister();
+        }
+        ++it;
     }
 }

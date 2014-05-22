@@ -7,8 +7,10 @@
 
 #include "serverpool.h"
 #include "mythtvexp.h"
+#include "mythmainwindow.h"
 
 class QMutex;
+class QTimer;
 class MThread;
 class BonjourRegister;
 
@@ -36,8 +38,20 @@ class AirplayConnection
       : controlSocket(NULL), reverseSocket(NULL), speed(1.0f),
         position(0.0f), initial_position(-1.0f), url(QUrl()),
         lastEvent(AP_EVENT_NONE), stopped(false), was_playing(false),
-        initialized(false)
+        initialized(false), photos(false), notificationid(-1)
     { }
+    ~AirplayConnection()
+    {
+        UnRegister();
+    }
+    void UnRegister(void)
+    {
+        if (notificationid > 0)
+        {
+            GetNotificationCenter()->UnRegister(this, notificationid);
+            notificationid = -1;
+        }
+    }
     QTcpSocket  *controlSocket;
     QTcpSocket  *reverseSocket;
     float        speed;
@@ -48,6 +62,9 @@ class AirplayConnection
     bool         stopped;
     bool         was_playing;
     bool         initialized;
+    bool         photos;
+    // Notification
+    int          notificationid;
 };
 
 class APHTTPRequest;
@@ -70,6 +87,7 @@ class MTV_PUBLIC MythAirplayServer : public ServerPool
     void newConnection(QTcpSocket *client);
     void deleteConnection();
     void read(void);
+    void timeout(void);
 
   private:
     virtual ~MythAirplayServer(void);
@@ -94,6 +112,7 @@ class MTV_PUBLIC MythAirplayServer : public ServerPool
     void SeekPosition(uint64_t position);
     void PausePlayback(void);
     void UnpausePlayback(void);
+    void HideAllPhotos(void);
 
     // Globals
     static MythAirplayServer *gMythAirplayServer;
@@ -116,8 +135,8 @@ class MTV_PUBLIC MythAirplayServer : public ServerPool
     //Incoming data
     QHash<QTcpSocket*, APHTTPRequest*> m_incoming;
 
-    // Notification
-    int             m_id;
+    // Bonjour Service re-advertising
+    QTimer         *m_serviceRefresh;
 };
 
 #endif // MYTHAIRPLAYSERVER_H
