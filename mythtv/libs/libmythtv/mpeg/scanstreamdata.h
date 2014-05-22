@@ -13,7 +13,7 @@ class MTV_PUBLIC ScanStreamData :
     public DVBStreamData
 {
   public:
-    ScanStreamData(bool no_default_pid = false);
+    ScanStreamData(bool no_default_pid = false, DVBKind dvbkind = kKindDVB);
     virtual ~ScanStreamData();
 
     bool IsRedundant(uint pid, const PSIPTable&) const;

@@ -1,8 +1,6 @@
 // -*- Mode: c++ -*-
 // Copyright (c) 2005, Daniel Thor Kristjansson
 
-#include <limits.h>
-
 #include "sctedescriptors.h"
 #include "atscdescriptors.h"
 #include "dvbdescriptors.h"
@@ -96,108 +94,6 @@ desc_list_t MPEGDescriptor::FindAll(const desc_list_t &parsed, uint desc_tag)
         if ((*it)[0] == desc_tag)
             tmp.push_back(*it);
     }
-    return tmp;
-}
-
-static uint maxPriority(const QMap<uint,uint> &langPrefs)
-{
-    uint max_pri = 0;
-    QMap<uint,uint>::const_iterator it = langPrefs.begin();
-    for (; it != langPrefs.end(); ++it)
-        max_pri = max(max_pri, *it);
-    return max_pri;
-}
-
-const unsigned char *MPEGDescriptor::FindBestMatch(
-    const desc_list_t &parsed, uint desc_tag, QMap<uint,uint> &langPrefs)
-{
-    uint match_idx = 0;
-    uint match_pri = UINT_MAX;
-    int  unmatched_idx = -1;
-
-    uint i = (desc_tag == DescriptorID::short_event) ? 0 : parsed.size();
-    for (; i < parsed.size(); i++)
-    {
-        if (DescriptorID::short_event == parsed[i][0])
-        {
-            ShortEventDescriptor sed(parsed[i]);
-            QMap<uint,uint>::const_iterator it =
-                langPrefs.find(sed.CanonicalLanguageKey());
-
-            if ((it != langPrefs.end()) && (*it < match_pri))
-            {
-                match_idx = i;
-                match_pri = *it;
-            }
-
-            if (unmatched_idx < 0)
-                unmatched_idx = i;
-        }
-    }
-
-    if (match_pri != UINT_MAX)
-        return parsed[match_idx];
-
-    if ((desc_tag == DescriptorID::short_event) && (unmatched_idx >= 0))
-    {
-        ShortEventDescriptor sed(parsed[unmatched_idx]);
-        langPrefs[sed.CanonicalLanguageKey()] = maxPriority(langPrefs) + 1;
-        return parsed[unmatched_idx];
-    }
-
-    return NULL;
-}
-
-desc_list_t MPEGDescriptor::FindBestMatches(
-    const desc_list_t &parsed, uint desc_tag, QMap<uint,uint> &langPrefs)
-{
-    uint match_pri = UINT_MAX;
-    int  match_key = 0;
-    int  unmatched_idx = -1;
-
-    uint i = (desc_tag == DescriptorID::extended_event) ? 0 : parsed.size();
-    for (; i < parsed.size(); i++)
-    {
-        if (DescriptorID::extended_event == parsed[i][0])
-        {
-            ExtendedEventDescriptor eed(parsed[i]);
-            QMap<uint,uint>::const_iterator it =
-                langPrefs.find(eed.CanonicalLanguageKey());
-
-            if ((it != langPrefs.end()) && (*it < match_pri))
-            {
-                match_key = eed.LanguageKey();
-                match_pri = *it;
-            }
-
-            if (unmatched_idx < 0)
-                unmatched_idx = i;
-        }
-    }
-
-    if ((desc_tag == DescriptorID::extended_event) &&
-        (match_key == 0) && (unmatched_idx >= 0))
-    {
-        ExtendedEventDescriptor eed(parsed[unmatched_idx]);
-        langPrefs[eed.CanonicalLanguageKey()] = maxPriority(langPrefs) + 1;
-        match_key = eed.LanguageKey();
-    }
-
-    desc_list_t tmp;
-    if (match_pri == UINT_MAX)
-        return tmp;
-
-    for (uint i = 0; i < parsed.size(); i++)
-    {
-        if ((DescriptorID::extended_event == desc_tag) &&
-            (DescriptorID::extended_event == parsed[i][0]))
-        {
-            ExtendedEventDescriptor eed(parsed[i]);
-            if (eed.LanguageKey() == match_key)
-                tmp.push_back(parsed[i]);
-        }
-    }
-
     return tmp;
 }
 
@@ -397,8 +293,8 @@ QString MPEGDescriptor::toString() const
         SET_STRING(ComponentNameDescriptor);
     else if (DescriptorID::conditional_access == DescriptorTag())
         SET_STRING(ConditionalAccessDescriptor);
-    else if (DescriptorID::network_name == DescriptorTag())
-        SET_STRING(NetworkNameDescriptor);
+    //else if (DescriptorID::network_name == DescriptorTag())
+    //    SET_STRING(NetworkNameDescriptor);
     //else if (DescriptorID::linkage == DescriptorTag())
     //    SET_STRING(LinkageDescriptor);
     else if (DescriptorID::adaptation_field_data == DescriptorTag())
@@ -413,14 +309,14 @@ QString MPEGDescriptor::toString() const
         SET_STRING(TerrestrialDeliverySystemDescriptor);
     else if (DescriptorID::frequency_list == DescriptorTag())
         SET_STRING(FrequencyListDescriptor);
-    else if (DescriptorID::service == DescriptorTag())
-        SET_STRING(ServiceDescriptor);
+    //else if (DescriptorID::service == DescriptorTag())
+    //    SET_STRING(ServiceDescriptor);
     else if (DescriptorID::stream_identifier == DescriptorTag())
         SET_STRING(StreamIdentifierDescriptor);
     else if (DescriptorID::default_authority == DescriptorTag())
         SET_STRING(DefaultAuthorityDescriptor);
-    else if (DescriptorID::bouquet_name == DescriptorTag())
-        SET_STRING(BouquetNameDescriptor);
+    //else if (DescriptorID::bouquet_name == DescriptorTag())
+    //    SET_STRING(BouquetNameDescriptor);
     else if (DescriptorID::country_availability == DescriptorTag())
         SET_STRING(CountryAvailabilityDescriptor);
     else if (DescriptorID::service_list == DescriptorTag())
