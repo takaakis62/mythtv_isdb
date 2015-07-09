@@ -2946,6 +2946,18 @@ typedef struct AVCodecContext {
     int64_t pts_correction_num_faulty_dts; /// Number of incorrect DTS values so far
     int64_t pts_correction_last_pts;       /// PTS of the last frame
     int64_t pts_correction_last_dts;       /// DTS of the last frame
+
+    /**
+     * Dual mono audio channel selection.
+     * Indicates how to decode a dual mono audio stream.
+     * 0: Main/L
+     * 1: Sub/R
+     * 2: Both/LR
+     * - encoding: unused
+     * - decoding: Set by user
+     */
+     int dualmono_mode;
+
 } AVCodecContext;
 
 /**
