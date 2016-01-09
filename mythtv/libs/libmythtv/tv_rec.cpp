@@ -1879,10 +1879,10 @@ bool TVRec::SetupDTVSignalMonitor(bool EITscan)
                     dvbkind = kKindISDB;
                 else
                     dvbkind = kKindDVB;
-                sd = dsd = new DVBStreamData(netid, tsid, progNum, cardid, false, dvbkind);
+                sd = dsd = new DVBStreamData(netid, tsid, progNum, cardid, dvbkind);
             }
             else
-                sd = dsd = new DVBStreamData(netid, tsid, progNum, cardid);
+                sd = dsd = new DVBStreamData(netid, tsid, progNum, cardid, kKindUnknown);
             sd->SetCaching(true);
             if (GetDTVRecorder())
                 GetDTVRecorder()->SetStreamData(dsd);

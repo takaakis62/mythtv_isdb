@@ -18,7 +18,7 @@ using namespace std;
 
 // service_id is synonymous with the MPEG program number in the PMT.
 DVBStreamData::DVBStreamData(uint desired_netid,  uint desired_tsid,
-                             int desired_program, int cardnum, bool cacheTables, DVBKind dvbkind)
+                             int desired_program, int cardnum, DVBKind dvbkind, bool cacheTables)
     : MPEGStreamData(desired_program, cardnum, cacheTables),
       _desired_netid(desired_netid), _desired_tsid(desired_tsid),
       _dvbkind(dvbkind),

@@ -40,7 +40,7 @@ static QString coderate_inner(uint coderate);
 class DVBDescriptor : public MPEGDescriptor
 {
   public:
-    DVBDescriptor(const unsigned char *data, DVBKind dvbkind = kKindUnknown, int len = 300, uint tag = NULL)
+    DVBDescriptor(const unsigned char *data, DVBKind dvbkind, int len = 300, uint tag = 0)
         : MPEGDescriptor(data, len, tag), _dvbkind(dvbkind)
     {
         if ((len < 2) || (int(DescriptorLength()) + 2) > len)
