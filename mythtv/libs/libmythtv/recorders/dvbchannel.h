@@ -77,6 +77,9 @@ class DVBChannel : public DTVChannel
     /// Returns # of uncorrected blocks since last call. First call undefined.
     double GetUncorrectedBlockCount(bool *ok = NULL) const;
 
+    /// Returns true if the device is a ISDB tuner
+    bool IsISDB() { return GetFrontendName().contains("ISDB"); }
+
     // Commands
     using DTVChannel::SwitchToInput;
     bool SwitchToInput(const QString &inputname, const QString &chan);

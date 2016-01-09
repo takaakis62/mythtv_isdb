@@ -60,6 +60,9 @@ DVBSignalMonitor::DVBSignalMonitor(int db_cardnum, DVBChannel* _channel,
       streamHandlerStarted(false),
       streamHandler(NULL)
 {
+    if (_channel->IsISDB())
+        IgnoreEncrypted(true);
+
     // These two values should probably come from the database...
     int wait = 3000; // timeout when waiting on signal
     int threshold = 0; // signal strength threshold
