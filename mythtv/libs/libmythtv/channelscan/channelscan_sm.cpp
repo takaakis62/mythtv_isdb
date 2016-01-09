@@ -181,7 +181,7 @@ ChannelScanSM::ChannelScanSM(
 #ifdef USING_DVB
         DVBChannel *dvbchannel = dynamic_cast<DVBChannel*>(channel);
         if (dvbchannel) {
-            if (dvbchannel->GetFrontendName().indexOf("ISDB") >= 0)
+            if (dvbchannel->IsISDB())
                 dvbkind = kKindISDB;
         }
 #endif
