@@ -750,7 +750,7 @@ static int pid_printer(const MythUtilCommandLineParser &cmdline)
     bool autopts = !cmdline.toBool("noautopts");
     bool use_xml = cmdline.toBool("xml");
 
-    ScanStreamData *sd = new ScanStreamData(true);
+    ScanStreamData *sd = new ScanStreamData(kKindUnknown, true);
     for (QHash<uint,bool>::iterator it = use_pid.begin();
          it != use_pid.end(); ++it)
     {
