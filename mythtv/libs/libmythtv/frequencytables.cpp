@@ -485,13 +485,13 @@ static void init_freq_tables(freq_table_map_t &fmap)
 
     // Japan (ISDB-T)
     fmap["dvbt_ofdm_jp0"] = new FrequencyTable(
-       473142857, 803142857, 6000000, "Channel %1", 13,
+        473142857, 803142857, 6000000, "Channel %1", 13,
         DTVInversion::kInversionAuto,
-        DTVBandwidth::kBandwidth6MHz, DTVCodeRate::kFECAuto,
-        DTVCodeRate::kFECAuto, DTVModulation::kModulationQAM64,
-        DTVTransmitMode::kTransmissionMode2K,
-        DTVGuardInterval::kGuardInterval_1_16, DTVHierarchy::kHierarchyNone,
-        DTVModulation::kModulationQAM64, 0, -0);
+        DTVBandwidth::kBandwidth6MHz, DTVCodeRate::kFEC_3_4,
+        DTVCodeRate::kFEC_3_4, DTVModulation::kModulationQAM64,
+        DTVTransmitMode::kTransmissionMode8K,
+        DTVGuardInterval::kGuardInterval_1_8, DTVHierarchy::kHierarchyNone,
+        DTVModulation::kModulationQAM64, 0, 0);
 
     // DVB-C Germany
     fmap["dvbc_qam_de0"] = new FrequencyTable(
